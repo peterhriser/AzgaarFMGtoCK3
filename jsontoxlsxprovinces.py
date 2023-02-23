@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import random
 
 # Load the JSON data from the file
 with open("noemoji.json") as file:
@@ -22,15 +23,27 @@ for cell in states:
     states_rows.append(row)
 
 # Create a list of dictionaries, where each dictionary represents a row of data for the provinces
+
 provinces_rows = []
+suffixes = ["castle", "town", "field", "pool","by","toft","worth","llyn","ay","y","ey","bost","caster","chester","cester","leigh","ley","borough","bury","burgh","wick"]
+names_set = set()  # to keep track of unique province names
+
 for cell in provinces:
     if isinstance(cell, dict):
+        name = cell["name"]
+        base_name = name
+        suffix_idx = 1
+        while name in names_set:  # check if name is already in set
+            name = base_name + suffixes[suffix_idx - 1]  # add a suffix to the name
+            suffix_idx += 1
+        names_set.add(name)  # add the unique name to the set
+
         row = {
             "i": cell["i"],
             "state": cell["state"],
             "center": cell["center"],
             "burg": cell["burg"],
-            "name": cell["name"],
+            "name": name,
             "formName": cell["formName"],
             "fullName": cell["fullName"],
             "color": cell["color"],
@@ -68,17 +81,35 @@ for cell in culture:
         }
         cultures_rows.append(row)
 
+suffixes = ["castle", "town", "field", "pool"]
+names = set()
 burgs_rows = []
+
+
+
+suffixes = ["castle", "town", "field", "pool","by","toft","worth","llyn","ay","y","ey","bost","caster","chester","cester","leigh","ley","borough","bury","burgh","wick"]
+names = set()
+burgs_rows = []
+
 for cell in burgs:
     if isinstance(cell, dict) and cell:
+        name = cell.get("name", None)
+        suffix = ""
+        while name + suffix in names:
+            suffix = f"{random.choice(suffixes)}"
+            if len(names) >= 4 * len(suffixes) * len(burgs):
+                print("ERROR: Could not generate unique names for all burgs.")
+                exit()
+        names.add(name + suffix)
         row = {
             "i": cell.get("i", None),
             "cell": cell.get("cell", None),
-            "name": cell.get("name", None),
+            "name": name + suffix,
         }
         burgs_rows.append(row)
 
 
+burgs_df = pd.DataFrame(burgs_rows, columns=["i", "cell", "name"])
 
 # Create data frames from the lists of dictionaries
 states_df = pd.DataFrame(states_rows, columns=["i", "name"])
